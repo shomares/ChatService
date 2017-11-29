@@ -42,7 +42,7 @@ namespace ChatServicio.src.chatTcp
         public ServerChatTCP(IRepositoryConnection _repository)
         {
             this._repository = _repository;
-            server = new TcpListener(IPAddress.Parse(GetLocalIPAddress()), Settings.Default.port);
+            server = new TcpListener(IPAddress.Any, Settings.Default.port);
          
             ThreadPool.SetMaxThreads(20, 20);
         }
