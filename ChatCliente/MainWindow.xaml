@@ -6,12 +6,43 @@
                            xmlns:rutina="clr-namespace:ChatCliente.src.rutines"
         xmlns:Controls="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
         xmlns:local="clr-namespace:ChatCliente"
+                      Closed="MetroWindow_Closed"
         mc:Ignorable="d"
         Title="Chat" Height="350" Width="525">
     <Window.Resources>
         <rutina:ChatRutine x:Key="ChatRutine"/>
+        <Style x:Key="placeHolder" TargetType="{x:Type TextBox}" BasedOn="{StaticResource {x:Type TextBox}}">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type TextBox}">
+                        <Grid>
+                            <TextBox Text="{Binding Path=Text,
+                                                RelativeSource={RelativeSource TemplatedParent}, 
+                                                Mode=TwoWay,
+                                                UpdateSourceTrigger=PropertyChanged}"
+                                 x:Name="textSource" 
+                                 Background="Transparent" 
+                                 Panel.ZIndex="2" />
+                            <TextBox Text="{TemplateBinding Tag}" Background="{TemplateBinding Background}" Panel.ZIndex="1">
+                                <TextBox.Style>
+                                    <Style TargetType="{x:Type TextBox}">
+                                        <Setter Property="Foreground" Value="Transparent"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding Path=Text, Source={x:Reference textSource}}" Value="">
+                                                <Setter Property="Foreground" Value="LightGray"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBox.Style>
+                            </TextBox>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
     </Window.Resources>
     <Grid>
+        
         <Grid.RowDefinitions>
             <RowDefinition Height="*" MinHeight="280"/>
             <RowDefinition MinHeight="1" MaxHeight="25"/>
@@ -25,9 +56,9 @@
             </DataGrid>
         </DockPanel>
         <DockPanel Grid.Row="1" VerticalAlignment="Stretch" >
-            <TextBox x:Name="textBox"  KeyUp="textBox_KeyDown"  />
+            <TextBox x:Name="textBox"  KeyUp="textBox_KeyDown" Style="{StaticResource placeHolder}" Tag="Mensaje..."   />
         </DockPanel>
-
+        <Controls:ProgressRing  DataContext="{Binding Source={StaticResource ChatRutine}}" IsActive="{Binding IsActive}" />
 
     </Grid>
 </Controls:MetroWindow>

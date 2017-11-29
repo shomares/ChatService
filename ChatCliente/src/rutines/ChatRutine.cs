@@ -16,7 +16,10 @@ namespace ChatCliente.src.rutines
     {
         private ObservableCollection<Message> _messagesObservation;
         private IChatClient _client;
+        private bool _isActive;
         private CancellationTokenSource _cancellationTokenSource;
+        private Thread th;
+        public event OnException OnError;
 
         private Message _current;
 
@@ -38,21 +41,42 @@ namespace ChatCliente.src.rutines
             get { return _current; }
         }
 
+        public bool IsActive
+        {
+            set { _isActive = value; NotifyPropertyChanged("IsActive"); }
+            get { return _isActive; }
+        }
 
 
         public ChatRutine()
         {
             _cancellationTokenSource = new CancellationTokenSource();
             Messages = new ObservableCollection<Message>();
+            this.IsActive = true;
             this._client = new ChatClient();
             this._client.cancellationToken = _cancellationTokenSource.Token;
             this._client.OnRecieved += _client_OnRecieved;
+            this._client.OnError += _client_OnError;
+            this._client.OnStart += _client_OnStart;
             Current = new Message();
+        }
+
+        private void _client_OnStart(string data)
+        {
+            App.Current?.Dispatcher.Invoke(() => // <--- HERE
+            {
+                this.IsActive = false;
+            });
+        }
+
+        private void _client_OnError(Exception data)
+        {
+            OnError(data);
         }
 
         private void _client_OnRecieved(string data)
         {
-            
+
             App.Current?.Dispatcher.Invoke(() => // <--- HERE
             {
                 Messages.Add(new Message()
@@ -68,7 +92,7 @@ namespace ChatCliente.src.rutines
 
         public void Start()
         {
-            Thread th = new Thread(() =>
+             th = new Thread(() =>
             {
                 _client.Start();
             });
@@ -87,6 +111,7 @@ namespace ChatCliente.src.rutines
         public void Stop()
         {
             _cancellationTokenSource.Cancel();
+            th.Abort();
         }
     }
 }

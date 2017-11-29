@@ -14,6 +14,8 @@ namespace ChatCliente.src.client
     {
         private TcpClient client;
         private CancellationToken _token;
+        private int Veces { get; set; }
+
 
         #region events
         public event OnRecieved OnRecieved;
@@ -42,17 +44,32 @@ namespace ChatCliente.src.client
 
         public void Start()
         {
-            client.Connect(Settings.Default.server, Settings.Default.port);
-            while (!cancellationToken.IsCancellationRequested)
+            try
             {
-                try
+                client.Connect(Settings.Default.server, Settings.Default.port);
+                while (!cancellationToken.IsCancellationRequested)
                 {
-                    byte[] buffer = new byte[256];
-                    client.Client.Receive(buffer, SocketFlags.None);
-                    OnRecieved(ASCIIEncoding.ASCII.GetString(buffer));
+                    OnStart("Se ha conectado con el servidor");
+                    try
+                    {
+                        byte[] buffer = new byte[256];
+                        client.Client.Receive(buffer, SocketFlags.None);
+                        OnRecieved(ASCIIEncoding.ASCII.GetString(buffer));
 
+                    }
+                    catch (Exception) { }
                 }
-                catch (Exception) { }
+            }
+            catch (Exception ex)
+            {
+                if (!cancellationToken.IsCancellationRequested)
+                {
+                    Thread.Sleep(1000);
+                    if ((Veces++) < 5)
+                        Start();
+                    else
+                        OnError(ex);
+                }
             }
         }
 
